@@ -7,6 +7,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interface/IToken.sol";
+import "./interface/ISetting.sol";
 
 struct Pixel {
     address owner;
@@ -22,16 +23,25 @@ struct Screenshot {
 
 // canvas
 contract Canvas is PausableUpgradeable {
+    ISetting public setting;
     IToken public nft;
 
+    // every epoch is 24 hours;
+    uint256 public epoch;
+
     mapping(uint256 => mapping(uint256 => Pixel)) public canvas; // x => y => HEX
-    mapping(uint256 => bool) public colors;
-    mapping(address => uint256) public lastPlaced;
+    mapping(uint256 => bool) public colors; // allowed colors
+    mapping(address => uint256) public lastPlaced; // when user last placed a pixel
 
-    mapping(uint256 => mapping(uint256 => Screenshot)) screenshots;
-    mapping(address => uint256) public lastScreenshotted;
+    mapping(uint256 => mapping(uint256 => Screenshot)) public screenshots;
+    mapping(address => uint256) public lastScreenshotted; // when users last screenshotted
 
-    constructor(IToken _nft, uint256[] memory _colors) {
+    // initialize
+    function initialize(
+        IToken _nft,
+        ISetting _setting,
+        uint256[] memory _colors
+    ) external initializer {
         __Pausable_init();
 
         // initialize color pallette
@@ -40,6 +50,8 @@ contract Canvas is PausableUpgradeable {
         }
 
         nft = _nft;
+        setting = _setting;
+        epoch = 60 * 60 * 24;
     }
 
     ////////////////////
@@ -52,7 +64,8 @@ contract Canvas is PausableUpgradeable {
         uint256 _y,
         uint256 _color
     ) external canUserPlace whenNotPaused {
-        require(colors[_color], "VALID COLOR");
+        require(setting.isColorValid(_color), "INVALID COLOR");
+        // require(colors[_color], "VALID COLOR");
         canvas[_x][_y] = Pixel({
             owner: msg.sender,
             color: _color,
@@ -76,7 +89,7 @@ contract Canvas is PausableUpgradeable {
     // User can place 1 pixel a day;
     modifier canUserPlace() {
         require(
-            block.timestamp - lastPlaced[msg.sender] >= 60 * 60 * 24,
+            block.timestamp - lastPlaced[msg.sender] >= epoch,
             "WAIT FOR COOLDOWN"
         );
         _;
@@ -85,7 +98,7 @@ contract Canvas is PausableUpgradeable {
     // user can screenshot once per day
     modifier canUserScreenshot() {
         require(
-            block.timestamp - lastScreenshotted[msg.sender] >= 60 * 60 * 24,
+            block.timestamp - lastScreenshotted[msg.sender] >= epoch,
             "WAIT FOR COOLDOWN"
         );
         _;
