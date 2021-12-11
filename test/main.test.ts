@@ -4,7 +4,7 @@ import { ethers as Ethers } from "ethers";
 import { ethers } from "hardhat";
 import { revertMessages, deployStarter } from "./helper";
 
-describe("PROGRAM_NAME", () => {
+describe("", () => {
   let starter: Starter;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;

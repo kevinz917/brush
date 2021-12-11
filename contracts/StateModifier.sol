@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "./interface/IGameStorage.sol";
-import "./GameState.sol";
+import "./types/GameState.sol";
 
 // These are "second lowest level" modifiers
 contract StateModifier {
