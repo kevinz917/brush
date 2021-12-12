@@ -33,7 +33,8 @@ library GameState {
     struct MasterGameStorage {
         // admin state
         bool isWorldPaused;
-        // TODO: How do people
+        //  world and user states
+
         uint256 dyeGeneratorNonce;
         address nextGameStorage; // TBD!!!
         mapping(address => User) playerState;
